@@ -6,6 +6,7 @@ import * as cg from 'chessground/types';
 import { Api as ChessgroundApi } from 'chessground/api';
 
 type CoordModifier = 'new' | 'next' | 'current' | 'resolved';
+type CoordinateMode = 'findSquare' | 'giveCoordinate';
 
 lichess.load.then(() => {
   $('#trainer').each(function (this: HTMLElement) {
@@ -19,6 +20,8 @@ lichess.load.then(() => {
     const $bar = $trainer.find('.progress_bar');
     const $start = $right.find('.start');
     const $explanation = $right.find('.explanation');
+    const $keyboard = $trainer.find('.coord-trainer__kb-input');
+    const $input = $keyboard.find('.keyboard');
     const $score = $('.coord-trainer__score');
     const $timer = $('.coord-trainer__timer');
     const scoreUrl = $trainer.data('score-url');
@@ -30,6 +33,29 @@ lichess.load.then(() => {
     let startAt: Date, score: number;
     let wrongTimeout: number;
     let ply = 0;
+    let mode: CoordinateMode = 'findSquare';
+
+    const setMode = (m: CoordinateMode) => {
+      mode = m;
+      if (mode === 'findSquare') {
+        $keyboard.removeClass('show');
+        $side.find('.charts h1').each(function (this: HTMLHeadingElement) {
+          this.textContent = 'Find Square';
+        });
+      } else {
+        $keyboard.addClass('show');
+        $side.find('.charts h1').each(function (this: HTMLHeadingElement) {
+          this.textContent = 'Give Coordinate';
+        });
+      }
+    };
+
+    $trainer.find('form.mode').each(function (this: HTMLFormElement) {
+      const $form = $(this);
+      $form.find('input').on('change', () => {
+        setMode($form.find('input:checked').val() === '1' ? 'findSquare' : 'giveCoordinate');
+      });
+    });
 
     const showColor = function () {
       color = colorPref == 'random' ? ['white', 'black'][Math.round(Math.random())] : colorPref;
@@ -194,6 +220,40 @@ lichess.load.then(() => {
       else stop();
     };
 
+    let current = 'e4' as Key;
+    const highlightNewSquare = () => {
+      current = newCoord(current);
+      ground.setShapes([{ orig: current, brush: 'green' }]);
+    };
+
+    $input.on('keyup', (e: KeyboardEvent) => {
+      if (!e.isTrusted) return;
+
+      const input = e.target as HTMLInputElement;
+      if (input.value === current) {
+        highlightNewSquare();
+        score++;
+        $score.text(score.toString());
+        input.value = '';
+        return;
+      }
+      if (input.value.length == 2) {
+        clearTimeout(wrongTimeout);
+        $trainer.addClass('wrong');
+
+        wrongTimeout = setTimeout(function () {
+          $trainer.removeClass('wrong');
+        }, 500);
+
+        input.value = '';
+      }
+    });
+    window.Mousetrap.bind('enter', () =>
+      $input.each(function (this: HTMLInputElement) {
+        this.focus();
+      })
+    );
+
     $start.on('click', () => {
       $explanation.remove();
       $trainer.addClass('play').removeClass('init');
@@ -206,31 +266,36 @@ lichess.load.then(() => {
       score = 0;
       $score.text(score.toString());
       $bar.css('width', 0);
+
       setTimeout(function () {
-        startAt = new Date();
-        ground.set({
-          events: {
-            select(key) {
-              const hit = key == coordEl('current').text();
-              if (hit) {
-                score++;
-                $score.text(score.toString());
-                advanceCoords();
-              } else {
-                clearTimeout(wrongTimeout);
-                $trainer.addClass('wrong');
+        if (mode === 'findSquare') {
+          const initialCoordValue = newCoord('a1');
+          coordTextEl('current').text(initialCoordValue);
+          coordTextEl('next').text(newCoord(initialCoordValue));
+          ground.set({
+            events: {
+              select(key) {
+                const hit = key == coordEl('current').text();
+                if (hit) {
+                  score++;
+                  $score.text(score.toString());
+                  advanceCoords();
+                } else {
+                  clearTimeout(wrongTimeout);
+                  $trainer.addClass('wrong');
 
-                wrongTimeout = setTimeout(function () {
-                  $trainer.removeClass('wrong');
-                }, 500);
-              }
+                  wrongTimeout = setTimeout(function () {
+                    $trainer.removeClass('wrong');
+                  }, 500);
+                }
+              },
             },
-          },
-        });
+          });
+        } else {
+          highlightNewSquare();
+        }
 
-        const initialCoordValue = newCoord('a1');
-        coordTextEl('current').text(initialCoordValue);
-        coordTextEl('next').text(newCoord(initialCoordValue));
+        startAt = new Date();
         tick();
       }, 1000);
     });

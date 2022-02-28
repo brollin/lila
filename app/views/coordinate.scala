@@ -11,6 +11,20 @@ import play.api.i18n.Lang
 
 import controllers.routes
 
+object CoordinateMode {
+  val FIND_SQUARE     = 1
+  val GIVE_COORDINATE = 2
+
+  val choices = Seq(
+    FIND_SQUARE     -> "Find Square",
+    GIVE_COORDINATE -> "Give Coordinate"
+  )
+  // val asString = Map(
+  //   1 -> "findSquare",
+  //   2 -> "giveCoordinate"
+  // )
+}
+
 object coordinate {
 
   def home(scoreOption: Option[lila.coordinate.Score])(implicit ctx: Context) =
@@ -37,11 +51,31 @@ object coordinate {
         attr("data-score-url") := ctx.isAuth.option(routes.Coordinate.score.url)
       )(
         div(cls := "coord-trainer__side")(
-          div(cls := "box")(
-            h1(trans.coordinates.coordinates()),
+          div(cls := "box charts")(
+            h1("Find Square"),
             if (ctx.isAuth) scoreOption.map { score =>
               div(cls := "scores")(scoreCharts(score))
             }
+          ),
+          form(
+            cls := "mode buttons",
+            method := "post",
+            autocomplete := "off"
+          )(
+            st.group(cls := "radio")(
+              CoordinateMode.choices.map { case (id, labelText) =>
+                div(cls := "mode-choice")(
+                  input(
+                    tpe := "radio",
+                    st.id := s"coord_mode_$id",
+                    name := "mode",
+                    value := id,
+                    (id == CoordinateMode.FIND_SQUARE) option checked
+                  ),
+                  label(`for` := s"coord_mode_$id", cls := s"mode mode_$id")(labelText)
+                )
+              }
+            )
           ),
           form(
             cls := "color buttons",
@@ -94,7 +128,11 @@ object coordinate {
           ),
           button(cls := "start button button-fat")(trans.coordinates.startTraining())
         ),
-        div(cls := "coord-trainer__progress")(div(cls := "progress_bar"))
+        div(cls := "coord-trainer__progress")(div(cls := "progress_bar")),
+        div(cls := "coord-trainer__kb-input")(
+          input(cls := "keyboard"),
+          strong("Press <enter> to focus")
+        )
       )
     )
 

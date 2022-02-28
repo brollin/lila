@@ -46,6 +46,10 @@ $mq-col3: $mq-x-large;
     grid-area: progress;
   }
 
+  &__kb-input {
+    grid-area: kb-input;
+  }
+
   &__score,
   &__timer {
     @extend %zen;
@@ -58,17 +62,27 @@ $mq-col3: $mq-x-large;
     color: $c-bad !important;
   }
 
-  grid-template-areas: 'board' 'progress' 'score' 'table' 'side';
+  grid-template-areas: 'board' 'progress' 'kb-input' 'table' 'side';
   grid-row-gap: $block-gap;
 
   @include breakpoint($mq-col2) {
     grid-template-columns: $col2-uniboard-width $block-gap $col2-uniboard-table;
     grid-template-rows: fit-content(0);
-    grid-template-areas: 'board    . table' 'board    . side' 'progress . .' 'score    . .';
+    grid-template-areas:
+      'board    . table'
+      'board    . side'
+      'progress . side'
+      'kb-input . side'
+      '.        . side';
   }
 
   @include breakpoint($mq-col3) {
-    grid-template-areas: 'side . board    . table' '.    . progress . .' '.    . score    . .';
+    grid-template-rows: fit-content(0);
+    grid-template-areas:
+      'side . board    . table'
+      'side . progress . table'
+      'side . kb-input . table'
+      'side . .        . table';
     grid-template-columns: $col3-uniboard-side $block-gap $col3-uniboard-width $block-gap $col3-uniboard-table;
   }
 
@@ -91,6 +105,18 @@ $mq-col3: $mq-x-large;
       display: flex;
       flex-direction: column;
       align-items: center;
+    }
+  }
+
+  form.mode {
+    margin-top: $block-gap;
+
+    .mode-choice {
+      width: 50%;
+    }
+
+    .mode-choice label {
+      font-size: 1.1em;
     }
   }
 
@@ -171,6 +197,27 @@ $mq-col3: $mq-x-large;
     background-color: $c-secondary;
   }
 
+  &__kb-input {
+    display: flex;
+    // justify-content: center;
+    align-items: center;
+
+    input.keyboard {
+      margin-right: 1em;
+      font-size: 1.25em;
+      width: 4em;
+    }
+
+    span {
+      font-size: 1.1em;
+    }
+
+    display: none;
+    &.show {
+      display: block;
+    }
+  }
+
   &__table {
     @extend %flex-center;
 
@@ -199,8 +246,11 @@ $mq-col3: $mq-x-large;
   }
 
   &.play .start,
-  &.play form.color {
-    display: none;
+  &.play {
+    form.color,
+    form.mode {
+      display: none;
+    }
   }
 
   &.init {
