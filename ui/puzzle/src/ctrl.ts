@@ -25,6 +25,7 @@ import { alert } from 'lib/view';
 import { toggleZenMode } from 'lib/view/zen';
 
 import computeAutoShapes from './autoShape';
+import { enableGooglyEyesTracking, disableGooglyEyesTracking } from './googlyHorsey';
 import type {
   PuzzleOpts,
   PuzzleData,
@@ -201,7 +202,16 @@ export default class PuzzleCtrl implements CevalHandler {
         g.state.addPieceZIndex = is3d;
         g.redrawAll();
       });
+      this.setAutoShapes();
     });
+  };
+
+  enableGooglyEyes = (el: HTMLElement): void => {
+    enableGooglyEyesTracking(el, () => this.setAutoShapes());
+  };
+
+  disableGooglyEyes = (): void => {
+    disableGooglyEyesTracking();
   };
 
   pref = this.opts.pref;
@@ -275,6 +285,7 @@ export default class PuzzleCtrl implements CevalHandler {
           color: undefined,
           dests: new Map(),
         };
+
     const config = {
       fen: node.fen,
       orientation: this.flipped() ? opposite(this.pov) : this.pov,
