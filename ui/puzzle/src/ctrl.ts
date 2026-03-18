@@ -205,6 +205,8 @@ export default class PuzzleCtrl implements CevalHandler {
       });
       this.setAutoShapes();
     });
+
+    this.googlyEyesAuto();
   };
 
   googlyEyesStart: () => void = () => {
@@ -218,6 +220,10 @@ export default class PuzzleCtrl implements CevalHandler {
             this.googlyEyes = makeGooglyShapes;
           });
       });
+  };
+
+  private googlyEyesAuto = () => {
+    if (this.isDaily && new Date().getMonth() === 3 && new Date().getDate() === 1) this.googlyEyesStart();
   };
 
   pref = this.opts.pref;
