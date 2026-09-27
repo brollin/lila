@@ -158,5 +158,52 @@ We are continuously improving our cheat detection so that we can efficiently pre
           List(AppealEffect.Unmark, AppealEffect.Close)
         )
       )
+    ),
+    AppealTopic.boost -> AppealFlow.make(
+      NonEmptyList.of(
+        ChoiceNode(
+          NodeId("communicate-conditions"),
+          Answerer.Mod,
+          "Communicate the conditions, then choose an outcome.",
+          NonEmptyList.of(
+            AnswerBranch(
+              AnswerId("enable-chat"),
+              "Chat box enabled",
+              NodeId("second-chance-this-account")
+            ),
+            AnswerBranch(
+              AnswerId("second-chance-new"),
+              "Second chance (new account)",
+              NodeId("second-chance")
+            ),
+            AnswerBranch(AnswerId("many-infractions"), "Many infractions", NodeId("waiting-period"))
+          )
+        ),
+        ActionNode(
+          NodeId("second-chance-this-account"),
+          """We are giving you a second chance on this account.
+
+The rating manipulation mark has been removed, and you can play rated games on this account again. Please follow our fair play rules (https://lichess.org/terms-of-service). Another violation may result in a permanent restriction.""",
+          List(AppealEffect.Unmark, AppealEffect.Close)
+        ),
+        ActionNode(
+          NodeId("second-chance"),
+          """As per our policy, we cannot remove the ban from this account, but we will let you make another (final) account where you can play rated games. You will need to register the new account with a different email address.
+
+We trust that you understand why this account was banned, and that in the future you will comply with our fair play rules (lichess.org/terms-of-service).
+
+Please tell us the name of your new account after you have created it by replying to this message. Otherwise, your new account is likely to be closed by the moderation team.
+
+Example: "My new account is @YOUR_ACCOUNT_NAME"
+"""
+        ),
+        ActionNode(
+          NodeId("waiting-period"),
+          """At least two accounts controlled by you or related to this account have broken our fair play rules (https://lichess.org/terms-of-service).
+
+Please appeal again in 6 months, as we will not give another chance before then. Do not create any new accounts until you appeal again.""",
+          List(AppealEffect.Sleep(6))
+        )
+      )
     )
   )

@@ -225,30 +225,10 @@ final class AppealTreeUi(helpers: Helpers, ui: AppealUi)(
     )
 
   private def boostMenu(using Context): Branch =
-    val accept = "I accept that I manipulated my rating."
-    val acceptFull =
-      "I accept that I deliberately manipulated my rating by losing games on purpose, or by playing another account that was deliberately losing games. I am sorry and I would like another chance."
-    val deny =
-      "I deny having manipulated my rating."
-    val denyFull =
-      "I deny having manipulated my rating. I have never lost rated games on purpose, or played several games with someone who does."
     Branch(
       "root",
       tap.boosterMarked(),
-      List(
-        screeningStepsThenLeaf(
-          "boost-accept",
-          AppealTopic.boost,
-          accept,
-          frag(sendUsAnAppeal, newAppeal(AppealTopic.boost)(acceptFull))
-        ),
-        screeningStepsThenLeaf(
-          "boost-deny",
-          AppealTopic.boost,
-          deny,
-          frag(sendUsAnAppeal, newAppeal(AppealTopic.boost)(denyFull))
-        )
-      ),
+      List(screeningSteps("boost-appeal", AppealTopic.boost, "Appeal rating manipulation restriction.")),
       content = frag(
         p(strong("Rating manipulation")),
         p("This includes, but isn’t limited to:"),

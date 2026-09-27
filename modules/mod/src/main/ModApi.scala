@@ -64,6 +64,7 @@ final class ModApi(
       .flatMapz: suspect =>
         topic match
           case AppealTopic.cheat => setEngine(suspect, false)
+          case AppealTopic.boost => setBoost(suspect, false).void
           case AppealTopic.comm => setTroll(suspect, false).void
           case AppealTopic.rank => setRankban(suspect, false)
           case AppealTopic.arena => setArenaBan(suspect, false)
@@ -86,7 +87,7 @@ final class ModApi(
         yield ()
     yield ()
 
-  def setBoost(prev: Suspect, v: Boolean)(using me: Me): Fu[Suspect] =
+  def setBoost(prev: Suspect, v: Boolean)(using me: MyId): Fu[Suspect] =
     if prev.user.marks.boost == v then fuccess(prev)
     else
       for
