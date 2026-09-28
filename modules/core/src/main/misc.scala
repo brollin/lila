@@ -68,6 +68,10 @@ package appeal:
 
 type BookmarkExists = (game.Game, Option[userId.UserId]) => Fu[Boolean]
 
+package practice:
+  import lila.core.id.{ StudyId, StudyChapterId }
+  case class OnComplete(userId: UserId, studyId: StudyId, chapterId: StudyChapterId)
+
 case class AuthCustomUi(name: String, imagePath: String, cssClass: String, lang: Lang)
 
 enum AppealTopic:
