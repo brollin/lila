@@ -486,7 +486,7 @@ lazy val report = module("report",
 
 lazy val appeal = module("appeal",
   Seq(memo, ui),
-  Seq()
+  tests.bundle
 )
 
 lazy val explorer = module("explorer",

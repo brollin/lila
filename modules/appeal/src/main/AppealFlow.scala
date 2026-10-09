@@ -32,41 +32,41 @@ case class ActionNode(
 
 case class AnswerBranch(id: AnswerId, answer: String, nextNodeId: NodeId)
 
-case class AppealFlow(rootId: NodeId, nodes: Map[NodeId, AppealNode]):
-  def root: AppealNode = nodes(rootId)
+case class AppealFlow(rootId: NodeId, nodes: List[AppealNode]):
+  def byId: Map[NodeId, AppealNode] = nodes.mapBy(_.id)
+  def root: AppealNode = byId(rootId)
 
 object AppealFlow:
 
-  def rootNodeAnswerer(topic: AppealTopic) =
-    appealFlows.get(topic).map(_.root).collect { case cn: ChoiceNode => cn.answerer }
+  def get(topic: AppealTopic): Option[AppealFlow] = current.get(topic)
 
-  def findNodeById(topic: AppealTopic, id: NodeId): Option[AppealNode] = appealFlows
-    .get(topic)
-    .flatMap(_.nodes.get(id))
+  def rootNodeAnswerer(topic: AppealTopic) =
+    get(topic).map(_.root).collect { case cn: ChoiceNode => cn.answerer }
+
+  def findNodeById(topic: AppealTopic, id: NodeId): Option[AppealNode] =
+    get(topic).flatMap(_.byId.get(id))
 
   def nextNode(appeal: Appeal): Option[AppealNode] =
-    if appeal.msgs.isEmpty then appealFlows.get(appeal.topic).map(_.root)
+    if appeal.msgs.isEmpty then get(appeal.topic).map(_.root)
     else
       appeal.msgs.lastOption.so:
         case event: ChoiceEvent =>
-          appealFlows
-            .get(appeal.topic)
-            .flatMap: flow =>
-              flow.nodes
-                .get(event.nodeId)
-                .so:
-                  case cn: ChoiceNode =>
-                    cn.branches
-                      .find(_.id == event.answerId)
-                      .flatMap: branch =>
-                        flow.nodes.get(branch.nextNodeId)
-                  case _ => none
+          get(appeal.topic).flatMap: flow =>
+            flow.byId
+              .get(event.nodeId)
+              .so:
+                case cn: ChoiceNode =>
+                  cn.branches
+                    .find(_.id == event.answerId)
+                    .flatMap: branch =>
+                      flow.byId.get(branch.nextNodeId)
+                case _ => none
         case _ => none
 
   private def make(appealNodes: NonEmptyList[AppealNode]) =
-    AppealFlow(appealNodes.head.id, appealNodes.toList.mapBy(_.id))
+    AppealFlow(appealNodes.head.id, appealNodes.toList)
 
-  private val appealFlows: Map[AppealTopic, AppealFlow] = Map(
+  private[appeal] val defaults: Map[AppealTopic, AppealFlow] = Map(
     AppealTopic.cheat -> AppealFlow.make(
       NonEmptyList.of(
         ChoiceNode(
@@ -207,3 +207,11 @@ Please appeal again in 6 months, as we will not give another chance before then.
       )
     )
   )
+
+  @volatile private var current: Map[AppealTopic, AppealFlow] = defaults
+
+  private[appeal] def replace(updates: Map[AppealTopic, AppealFlow]): Unit =
+    current = defaults ++ updates
+
+  private[appeal] def update(topic: AppealTopic, flow: AppealFlow): Unit =
+    current = current.updated(topic, flow)

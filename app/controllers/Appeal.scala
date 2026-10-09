@@ -2,10 +2,10 @@ package controllers
 package appeal
 
 import play.api.data.Form
-import play.api.mvc.Result
+import play.api.mvc.{ AnyContentAsFormUrlEncoded, Result }
 
 import lila.app.{ *, given }
-import lila.appeal.{ Appeal as AppealModel, AppealTopicApi }
+import lila.appeal.{ Appeal as AppealModel, AppealFlow, AppealFlowForm, AppealFlowValidation, AppealTopicApi }
 import lila.report.Suspect
 import lila.core.misc.AppealTopic
 
@@ -238,6 +238,51 @@ final class Appeal(env: Env, reportC: => report.Report, userC: => User) extends 
       for _ <- env.irc.api.userAppeal(s.user.light)
       yield NoContent
   }
+
+  def flowEdit(topic: AppealTopic) = Secure(_.Presets) { _ ?=> _ ?=>
+    storedFlow(topic).fold(notFound): flow =>
+      Ok.page:
+        flowPage(
+          topic,
+          AppealFlowForm.form.fill(AppealFlowForm.from(flow)),
+          warnings = AppealFlowValidation(flow.rootId, flow.nodes).warnings
+        )
+  }
+
+  def flowUpdate(topic: AppealTopic) = SecureBody(_.Presets) { ctx ?=> me ?=>
+    if !AppealTopicApi.usesNewAppealFlow(topic) then notFound
+    else
+      bindForm(AppealFlowForm.form)(
+        err => BadRequest.page(flowPage(topic, err)),
+        data =>
+          val posted = ctx.body.body match
+            case AnyContentAsFormUrlEncoded(fields) => fields
+            case _ => Map.empty[String, Seq[String]]
+          val edit = AppealFlowForm.readEdit(posted)
+          if edit != AppealFlowForm.Edit.Save then
+            Ok.page(flowPage(topic, AppealFlowForm.form.fill(AppealFlowForm.applyEdit(data, edit))))
+          else
+            AppealFlowForm.build(data) match
+              case Left(errors) =>
+                BadRequest.page(flowPage(topic, AppealFlowForm.form.fill(data), errors))
+              case Right(flow) =>
+                env.appeal.flows
+                  .save(topic, flow, me.userId)
+                  .inject:
+                    Redirect(routes.Appeal.flowEdit(topic)).flashSuccess
+      )
+  }
+
+  private def storedFlow(topic: AppealTopic): Option[AppealFlow] =
+    AppealTopicApi.usesNewAppealFlow.contains(topic).so(AppealFlow.get(topic))
+
+  private def flowPage(
+      topic: AppealTopic,
+      form: Form[AppealFlowForm.Data],
+      errors: List[String] = Nil,
+      warnings: List[String] = Nil
+  )(using Context) =
+    views.appeal.flowEdit(topic, form, env.appeal.flows.info(topic), errors, warnings)
 
   def snooze(username: UserStr, topic: AppealTopic, dur: String) = Secure(_.Appeals) { _ ?=> _ ?=>
     asMod(username, topic): (appeal, _) =>

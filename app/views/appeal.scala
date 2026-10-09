@@ -1,7 +1,9 @@
 package views.appeal
 
+import play.api.data.Form
+
 import lila.app.UiEnv.{ *, given }
-import lila.appeal.{ Appeal, AppealForm }
+import lila.appeal.{ Appeal, AppealFlowForm, AppealFlowInfo, AppealForm }
 import lila.report.ui.PendingCounts
 import lila.report.Report.Inquiry
 import lila.core.misc.AppealTopic
@@ -9,6 +11,8 @@ import lila.core.misc.AppealTopic
 lazy val ui = lila.appeal.ui.AppealUi(helpers)
 
 lazy val flow = lila.appeal.ui.AppealFlowUi(helpers, ui)
+
+private lazy val flowEditUi = lila.appeal.ui.AppealFlowEditUi(helpers)
 
 lazy val discussion = lila.appeal.ui.AppealDiscussionUi(helpers, ui)
 
@@ -18,6 +22,15 @@ lazy val tree = lila.appeal.ui.AppealTreeUi(helpers, ui)(
 )
 
 private lazy val queueUi = lila.appeal.ui.AppealQueueUi(helpers)
+
+def flowEdit(
+    topic: AppealTopic,
+    form: Form[AppealFlowForm.Data],
+    info: AppealFlowInfo,
+    errors: List[String],
+    warnings: List[String]
+)(using Context): lila.ui.Page =
+  flowEditUi(topic, form, info, errors, warnings, views.mod.ui.menu("presets"))
 
 def queue(
     appeals: List[Appeal],

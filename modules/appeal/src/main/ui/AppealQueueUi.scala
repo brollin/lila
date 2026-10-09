@@ -19,7 +19,17 @@ final class AppealQueueUi(helpers: Helpers):
         tr(
           th(topicFilter(topic)),
           th,
-          th(Granter(_.Presets).option(a(href := routes.Mod.presets("appeal"))("Presets")))
+          th(
+            Granter(_.Presets).option(
+              frag(
+                a(href := routes.Mod.presets("appeal"))("Presets"),
+                " · ",
+                a(href := routes.Appeal.flowEdit(AppealTopic.cheat))("Cheat flow"),
+                " · ",
+                a(href := routes.Appeal.flowEdit(AppealTopic.boost))("Boost flow")
+              )
+            )
+          )
         )
       ),
       tbody(

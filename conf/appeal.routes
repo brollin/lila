@@ -5,6 +5,8 @@ POST  /appeal/:topic/withdraw          controllers.appeal.Appeal.withdraw(topic:
 GET   /appeal/landing                  controllers.appeal.Appeal.landing
 GET   /appeal/closed-by-teacher        controllers.appeal.Appeal.closedByTeacher
 GET   /appeal/queue                    controllers.appeal.Appeal.modQueue
+GET   /appeal/flow/:topic              controllers.appeal.Appeal.flowEdit(topic: AppealTopic)
+POST  /appeal/flow/:topic              controllers.appeal.Appeal.flowUpdate(topic: AppealTopic)
 GET   /appeal/:username                       controllers.appeal.Appeal.modShowAll(username: UserStr)
 GET   /appeal/:username/:topic                controllers.appeal.Appeal.modShow(username: UserStr, topic: AppealTopic)
 POST  /appeal/:username/:topic/handle         controllers.appeal.Appeal.modHandle(username: UserStr, topic: AppealTopic)

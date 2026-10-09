@@ -13,9 +13,14 @@ final class Env(db: lila.db.Db, cacheApi: lila.memo.CacheApi)(using Executor)(us
   private lazy val snoozer = lila.memo.Snoozer[Appeal.SnoozeKey]("appeal.snooze", cacheApi)
 
   lazy val api: AppealApi = wire[AppealApi]
+  val flows = AppealFlowApi(db(CollName("appeal_flow")))
+  flows.warmup()
 
   scheduler.scheduleWithFixedDelay(55.minutes, 1.hour): () =>
     api.countUnread.foreach(lila.mon.mod.queueStatus("appeal", 40).update(_))
+
+  scheduler.scheduleWithFixedDelay(1.minute, 1.minute): () =>
+    flows.refresh()
 
   scheduler.scheduleWithFixedDelay(5.minutes, 5.minutes): () =>
     api.reopenPausedAppeals()

@@ -375,3 +375,39 @@
 
   font-style: italic;
 }
+
+.appeal-flow-edit {
+  &__note,
+  &__warning {
+    margin: 0 0 1em;
+  }
+
+  &__warning {
+    color: $c-brag;
+  }
+
+  &__node {
+    border: $border;
+    padding: 1em 1.5em 1.5em;
+    margin: 0 0 1.5em;
+    background: $c-bg-zebra;
+
+    h2 {
+      font-size: 1.3em;
+    }
+  }
+
+  &__node__bar,
+  &__add {
+    @extend %flex-between;
+
+    gap: 1em;
+    margin-bottom: 1em;
+  }
+
+  &__branch {
+    border-top: $border;
+    margin-top: 1em;
+    padding-top: 1em;
+  }
+}
