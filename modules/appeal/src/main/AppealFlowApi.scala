@@ -34,7 +34,7 @@ final class AppealFlowApi(coll: Coll)(using Executor):
       .recover: err =>
         logger.warn(s"Appeal flow warmup failed: ${err.getMessage}")
 
-  def refresh(): Funit =
+  private def refresh(): Funit =
     coll
       .list[Bdoc](bdoc())
       .map: docs =>

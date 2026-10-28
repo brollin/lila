@@ -19,9 +19,6 @@ final class Env(db: lila.db.Db, cacheApi: lila.memo.CacheApi)(using Executor)(us
   scheduler.scheduleWithFixedDelay(55.minutes, 1.hour): () =>
     api.countUnread.foreach(lila.mon.mod.queueStatus("appeal", 40).update(_))
 
-  scheduler.scheduleWithFixedDelay(1.minute, 1.minute): () =>
-    flows.refresh()
-
   scheduler.scheduleWithFixedDelay(5.minutes, 5.minutes): () =>
     api.reopenPausedAppeals()
     api.countUnreadByTopic.foreach(lila.mon.appeal.unreadByTopic)
